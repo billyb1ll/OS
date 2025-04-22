@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Music Visualizer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #ffffff; /* White background */
+            color: #000;
+        }
+        #drop-area {
+            border: 2px dashed #ccc;
+            padding: 50px;
+            width: 300px;
+            text-align: center;
+            margin-top: 50px;
+            color: #666;
+        }
+        #canvas {
+            margin-top: 20px;
+            background-color: #ffffff; /* Match the body background */
+        }
+        audio {
+            display: none; /* Hide the audio element */
+        }
+        #status {
+            margin-top: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px 0;
+        }
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            min-width: 100px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            color: #666666;
+            border-color: #bbbbbb;
+            cursor: not-allowed;
+        }
+        #stop-button {
+            background-color: #ff6b6b;
+            color: white;
+            border-color: #ff4040;
+        }
+        #play-pause-button {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #45a049;
+        }
+        #stop-audio-button {
+            background-color: #ff9800;
+            color: white;
+            border-color: #e68a00;
+        }
+        label {
+            font-size: 14px;
+            margin-right: 5px;
+        }
+        input[type="range"] {
+            width: 100px;
+        }
+        .value-display {
+            min-width: 40px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .time-display {
+            font-family: monospace;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Music Visualizer</h1>
+    <h2 id="file-name">No file playing</h2> <!-- File name heading -->
+    <div id="drop-area">
+        <p>Drag and drop an MP3 file here</p>
+    </div>
+    <div id="controls">
+        <div class="control-group">
+            <button id="play-pause-button" disabled>Play</button>
+            <button id="stop-audio-button" disabled>Stop</button>
+            <span class="time-display" id="time-display">00:00 / 00:00</span>
+        </div>
+        <div class="control-group">
+            <label for="volume-control">Volume:</label>
+            <input type="range" id="volume-control" min="0" max="1" step="0.01" value="1">
+            <span class="value-display" id="volume-display">100%</span>
+        </div>
+        <div class="control-group">
+            <label for="speed-control">Speed:</label>
+            <input type="range" id="speed-control" min="0.5" max="2" step="0.1" value="1">
+            <span class="value-display" id="speed-display">1.0x</span>
+        </div>
+        <div class="control-group">
+            <button id="stop-button" disabled>Stop Processing</button>
+        </div>
+    </div>
+    <div id="status">Ready</div>
+    <canvas id="canvas" width="800" height="400"></canvas>
+    <audio id="audio" controls></audio> <!-- Hidden audio element for Web Audio API -->
+
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const audio = document.getElementById('audio');
+        const fileNameDisplay = document.getElementById('file-name');
+        const statusDisplay = document.getElementById('status');
+        const stopButton = document.getElementById('stop-button');
+        const playPauseButton = document.getElementById('play-pause-button');
+        const stopAudioButton = document.getElementById('stop-audio-button');
+        const volumeControl = document.getElementById('volume-control');
+        const volumeDisplay = document.getElementById('volume-display');
+        const speedControl = document.getElementById('speed-control');
+        const speedDisplay = document.getElementById('speed-display');
+        const timeDisplay = document.getElementById('time-display');
+        
+        // Initialize socket.io connection
+        const socket = io();
+        
+        let audioContext, analyser, dataArray;
+        let isProcessingRemote = false;
+        let currentTaskId = null;
+        let updateTimeInterval = null;
+
+        // Audio playback controls
+        playPauseButton.addEventListener('click', togglePlayPause);
+        stopAudioButton.addEventListener('click', stopAudio);
+        volumeControl.addEventListener('input', updateVolume);
+        speedControl.addEventListener('input', updateSpeed);
+        
+        function togglePlayPause() {
+            if (audio.paused) {
+                audio.play();
+                playPauseButton.textContent = 'Pause';
+            } else {
+                audio.pause();
+                playPauseButton.textContent = 'Play';
+            }
+        }
+        
+        function stopAudio() {
+            audio.pause();
+            audio.currentTime = 0;
+            playPauseButton.textContent = 'Play';
+        }
+        
+        function updateVolume() {
+            audio.volume = volumeControl.value;
+            volumeDisplay.textContent = `${Math.round(volumeControl.value * 100)}%`;
+        }
+        
+        function updateSpeed() {
+            audio.playbackRate = speedControl.value;
+            speedDisplay.textContent = `${speedControl.value}x`;
+        }
+        
+        function updateTimeDisplay() {
+            if (!audio.duration) return;
+            
+            const currentMinutes = Math.floor(audio.currentTime / 60);
+            const currentSeconds = Math.floor(audio.currentTime % 60);
+            const totalMinutes = Math.floor(audio.duration / 60);
+            const totalSeconds = Math.floor(audio.duration % 60);
+            
+            timeDisplay.textContent = `${currentMinutes.toString().padStart(2, '0')}:${currentSeconds.toString().padStart(2, '0')} / ${totalMinutes.toString().padStart(2, '0')}:${totalSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Set up audio events
+        audio.addEventListener('play', () => {
+            playPauseButton.textContent = 'Pause';
+        });
+        
+        audio.addEventListener('pause', () => {
+            playPauseButton.textContent = 'Play';
+        });
+        
+        audio.addEventListener('ended', () => {
+            playPauseButton.textContent = 'Play';
+        });
+        
+        audio.addEventListener('loadedmetadata', () => {
+            playPauseButton.disabled = false;
+            stopAudioButton.disabled = false;
+            updateTimeDisplay();
+            
+            // Set up interval for updating time display
+            if (updateTimeInterval) clearInterval(updateTimeInterval);
+            updateTimeInterval = setInterval(updateTimeDisplay, 1000);
+        });
+
+        // Socket connection events
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            statusDisplay.textContent = 'Connected to server';
+        });
+        
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+            statusDisplay.textContent = 'Disconnected from server';
+            stopButton.disabled = true;
+        });
+        
+        socket.on('audio_chunk', (chunkData) => {
+            console.log('Received audio chunk');
+            // Process chunk data for visualization
+            // You could update a visualization directly from server data here
+        });
+        
+        socket.on('processing_complete', () => {
+            console.log('Audio processing complete');
+            statusDisplay.textContent = 'Audio processing complete';
+            isProcessingRemote = false;
+            stopButton.disabled = true;
+        });
+        
+        socket.on('processing_stopped', () => {
+            console.log('Audio processing stopped');
+            statusDisplay.textContent = 'Processing stopped by user';
+            isProcessingRemote = false;
+            stopButton.disabled = true;
+        });
+
+        // Stop button event listener
+        stopButton.addEventListener('click', async () => {
+            if (!isProcessingRemote || !currentTaskId) return;
+            
+            try {
+                statusDisplay.textContent = 'Stopping processing...';
+                
+                const response = await fetch('/stop-processing', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ task_id: currentTaskId })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to stop processing');
+                }
+                
+                console.log('Stop request sent successfully');
+                // Wait for the server to confirm via socket
+                
+            } catch (error) {
+                console.error('Error stopping processing:', error);
+                statusDisplay.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Drag and drop event listeners
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropArea.style.backgroundColor = '#f0f0f0';
+        });
+        
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.style.backgroundColor = '';
+        });
+        
+        dropArea.addEventListener('drop', handleDrop);
+
+        async function handleDrop(event) {
+            event.preventDefault();
+            dropArea.style.backgroundColor = '';
+            
+            const file = event.dataTransfer.files[0];
+            if (!file) return;
+            
+            // Display the name of the file
+            fileNameDisplay.textContent = `Processing: ${file.name}`;
+            statusDisplay.textContent = 'Uploading file...';
+            
+            // Reset audio controls
+            stopAudio();
+            playPauseButton.disabled = true;
+            stopAudioButton.disabled = true;
+            
+            try {
+                // Create a FormData object to send the file
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                // Upload the file to the server
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Unknown error');
+                }
+                
+                // Get response data including task ID
+                const data = await response.json();
+                currentTaskId = data.task_id;
+                
+                // Enable stop button now that processing has started
+                stopButton.disabled = false;
+                
+                // File uploaded successfully
+                statusDisplay.textContent = 'File uploaded, processing on server...';
+                isProcessingRemote = true;
+                
+                // Also play locally for the user
+                const fileURL = URL.createObjectURL(file);
+                audio.src = fileURL;
+                fileNameDisplay.textContent = `Playing: ${file.name}`;
+                
+                // Initialize Web Audio API for local visualization
+                if (!audioContext) {
+                    initAudioContext();
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDisplay.textContent = `Error: ${error.message}`;
+                fileNameDisplay.textContent = 'Upload failed';
+                stopButton.disabled = true;
+                playPauseButton.disabled = true;
+                stopAudioButton.disabled = true;
+            }
+        }
+
+        function initAudioContext() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaElementSource(audio);
+            analyser = audioContext.createAnalyser();
+
+            analyser.fftSize = 256; // Size of FFT window for frequency resolution
+            const bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+
+            // Start the animation loop
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!analyser) return;
+
+            // Get frequency data from the analyser
+            analyser.getByteFrequencyData(dataArray);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const barWidth = (canvas.width / dataArray.length) * 2.5;
+            let x = 0;
+
+            for (let i = 0; i < dataArray.length; i++) {
+                const barHeight = dataArray[i];
+                ctx.fillStyle = `rgb(0, 0, 0)`;  // Set bars to black
+                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+
+                x += barWidth + 1; // Add 1 for spacing
+            }
+        }
+        
+        // Clean up when page is unloaded
+        window.addEventListener('beforeunload', () => {
+            if (updateTimeInterval) {
+                clearInterval(updateTimeInterval);
+            }
+        });
+    </script>
+</body>
+</html>
