@@ -9,6 +9,7 @@ from queue import Queue, Empty
 import time
 import logging
 import uuid
+import os
 
 # Configure logging with more detail - include timestamp
 logging.basicConfig(
@@ -257,7 +258,8 @@ def handle_disconnect():
 if __name__ == "__main__":
     logger.info(
         f"Starting server with {thread_executor._max_workers} worker threads")
-    socketio.run(app, debug=True, host='0.0.0.0')
+    port = int(os.environ.get("PORT", 8080))  # Default to 8080 if PORT is not set
+    socketio.run(app, debug=True, host="0.0.0.0", port=port)
     # Clean up threads when the application exits
     thread_executor.shutdown()
     logger.info("Server shutting down, cleaning up thread pool")
