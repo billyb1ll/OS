@@ -20,4 +20,4 @@ ENV PORT=8080
 EXPOSE ${PORT}
 
 # Command to run the application
-CMD gunicorn -w 4 -b 0.0.0.0:${PORT} app:app
+CMD ["gunicorn", "--workers=4", "--bind=0.0.0.0:${PORT}", "app:app"]
