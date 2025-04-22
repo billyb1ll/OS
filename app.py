@@ -328,12 +328,12 @@ if __name__ == "__main__":
     logger.info(
         f"Starting server with {thread_executor._max_workers} worker threads")
     try:
-        port = 5000 # Default port if not specified
+        port = int(os.environ.get("PORT", 8080))  # Default port if not specified
         logger.info(f"Server starting on port {port}")
         socketio.run(app, debug=True, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
     except ValueError as e:
         logger.error(f"Invalid port configuration: {e}")
-        port = 8080
+        port = 5000
         logger.info(f"Falling back to default port {port}")
         socketio.run(app, debug=True, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
     
