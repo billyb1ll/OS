@@ -22,16 +22,98 @@
             border-radius: 8px;
             overflow: hidden; /* Keep elements contained */
         }
-        #drop-area {
+        #drop-area, #bottom-drop-area {
             border: 2px dashed #ccc;
-            padding: 50px;
-            width: calc(100% - 104px); /* Adjust width considering padding */
+            padding: 30px;
+            width: calc(100% - 64px); /* Adjust width considering padding */
             text-align: center;
             margin: 20px auto; /* Center the drop area */
             color: #666;
             background-color: #fafafa;
             border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+        #drop-area {
+            padding: 50px 30px;
+        }
+        .file-upload-btn {
+            margin-top: 15px;
+            padding: 8px 16px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .file-upload-btn:hover {
+            background-color: #3367d6;
+        }
+        .file-upload-btn::before {
+            content: "📁";
+        }
+        .file-input {
+            display: none; /* Hide the native file input */
+        }
+        
+        /* Test songs section */
+        #test-songs-container {
+            width: calc(100% - 64px);
+            max-width: 800px;
+            margin: 10px auto 20px;
+            text-align: center;
+            padding: 10px 15px 15px;
+            background-color: #e8f0fe;
+            border-radius: 8px;
+            border: 1px solid #c9d6eb;
+        }
+        #test-songs-container h3 {
+            margin: 5px 0 10px;
+            font-size: 16px;
+            color: #4285f4;
+        }
+        #test-songs-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+        }
+        .test-song-btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 5px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+            transition: all 0.2s ease;
+        }
+        .test-song-btn:hover {
+            background-color: #3367d6;
+            transform: scale(1.05);
+        }
+        .test-song-btn:before {
+            content: "🎵";
+            margin-right: 5px;
+        }
+        #test-songs-loading {
+            color: #666;
+            font-style: italic;
+            margin: 10px 0;
+        }
+        
         #canvas {
             display: block; /* Remove extra space below canvas */
             background-color: #000; /* Black background for visualizer */
@@ -174,6 +256,98 @@
         /* Hide stop processing button for now */
         #stop-button { display: none; }
 
+        #bottom-drop-area {
+            width: 80%; /* Adjust width as needed */
+            max-width: 800px; /* Match player width */
+            margin: 30px auto; /* Add space above and center */
+        }
+
+        /* Responsive Design */
+        @media (max-width: 850px) { /* Adjust breakpoint as needed */
+            #player-container {
+                width: 95%; /* Use more width on smaller screens */
+            }
+            #main-controls {
+                flex-direction: column; /* Stack controls vertically */
+                align-items: flex-start; /* Align items to the start */
+                gap: 10px;
+            }
+            .left-controls, .right-controls {
+                width: 100%; /* Make control groups take full width */
+                justify-content: space-between; /* Space out items within groups */
+            }
+            .right-controls {
+                flex-direction: column; /* Stack right controls */
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .control-group {
+                width: 100%;
+                justify-content: space-between;
+            }
+            input[type="range"] {
+                width: 150px; /* Give sliders more space */
+            }
+            #bottom-drop-area {
+                width: 90%;
+            }
+            .file-upload-btn {
+                margin-top: 15px;
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) { /* Further adjustments for very small screens */
+            h1 {
+                font-size: 1.5em;
+            }
+            #player-container {
+                width: 100%;
+                border-radius: 0;
+                box-shadow: none;
+            }
+            #controls-bar {
+                padding: 10px;
+            }
+            .left-controls {
+                 flex-direction: column; /* Stack play/stop/time */
+                 align-items: flex-start;
+                 gap: 10px;
+            }
+            .time-display {
+                align-self: flex-start; /* Align time to the start */
+            }
+            button {
+                padding: 10px 15px; /* Slightly larger touch targets */
+            }
+            label {
+                font-size: 12px;
+            }
+            .value-display {
+                font-size: 12px;
+            }
+            #bottom-drop-area {
+                width: 95%;
+                padding: 20px;
+            }
+            /* Make upload button more prominent on mobile */
+            .file-upload-btn {
+                width: 80%;
+                padding: 12px 10px;
+                font-size: 16px;
+                margin-top: 20px;
+            }
+        }
+
+        footer {
+            margin-top: 40px; /* Add space above the footer */
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -181,6 +355,19 @@
 
     <div id="drop-area">
         <p>Drag and drop an MP3 file here</p>
+        <label class="file-upload-btn">
+            <input type="file" class="file-input" id="file-upload" accept="audio/*">
+            Upload File
+        </label>
+    </div>
+
+
+    <div id="test-songs-container">
+        <h3>Available Test Songs</h3>
+        <div id="test-songs-list">
+            <!-- Test song buttons will be dynamically added here -->
+        </div>
+        <div id="test-songs-loading">Loading test songs...</div>
     </div>
 
     <div id="player-container">
@@ -207,7 +394,7 @@
                         <input type="range" id="speed-control" min="0.5" max="2" step="0.1" value="1">
                         <span class="value-display" id="speed-display">1.0x</span>
                     </div>
-                    <!-- Stop processing button is hidden via CSS for now -->
+                    <!-- Stop processing button is hidden via CSS -->
                     <button id="stop-button" disabled>Stop Processing</button>
                 </div>
             </div>
@@ -215,10 +402,24 @@
     </div>
 
     <div id="status">Ready</div>
-    <audio id="audio"></audio> <!-- Removed 'controls' attribute -->
+    <audio id="audio"></audio> 
+
+    <!-- Bottom drop area for uploading additional songs -->
+    <div id="bottom-drop-area">
+        <p>Upload more music</p>
+        <label class="file-upload-btn">
+            <input type="file" class="file-input" id="bottom-file-upload" accept="audio/*">
+            Upload File
+        </label>
+    </div>
+
+    <footer>
+        Powered by <a href="https://github.com/billyb1ll/OS" label="github">Billy</a>@Ratatatamoth group - 2025
+    </footer>
 
     <script>
         const dropArea = document.getElementById('drop-area');
+        const bottomDropArea = document.getElementById('bottom-drop-area');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const audio = document.getElementById('audio');
@@ -233,6 +434,11 @@
         const speedDisplay = document.getElementById('speed-display');
         const timeDisplay = document.getElementById('time-display');
         const seekBar = document.getElementById('seek-bar');
+        const fileUpload = document.getElementById('file-upload');
+        const bottomFileUpload = document.getElementById('bottom-file-upload');
+        const testSongsContainer = document.getElementById('test-songs-container');
+        const testSongsList = document.getElementById('test-songs-list');
+        const testSongsLoading = document.getElementById('test-songs-loading');
         
         // Initialize socket.io connection
         const socket = io();
@@ -248,13 +454,84 @@
         volumeControl.addEventListener('input', updateVolume);
         speedControl.addEventListener('input', updateSpeed);
 
-        // Update seek bar as the audio plays
+        // Load test songs dynamically
+        async function loadTestSongs() {
+            try {
+                const response = await fetch('/test-songs');
+                const songs = await response.json();
+
+                if (songs.length === 0) {
+                    testSongsLoading.textContent = 'No test songs available';
+                    return;
+                }
+
+                testSongsLoading.style.display = 'none';
+
+                songs.forEach(song => {
+                    const button = document.createElement('button');
+                    button.className = 'test-song-btn';
+                    button.textContent = song.name;
+                    button.addEventListener('click', () => {
+                        // Reset audio if already playing
+                        stopAudio();
+                        
+                        // Update UI
+                        fileNameDisplay.textContent = `Playing: ${song.name}`;
+                        statusDisplay.textContent = 'Loading test song...';
+                        
+                        // Set audio source
+                        audio.src = song.url;
+                        
+                        // Enable controls
+                        playPauseButton.disabled = false;
+                        stopAudioButton.disabled = false;
+                        
+                        // Initialize audio context before playing
+                        // This is the key fix - must be done AFTER setting audio.src but BEFORE play()
+                        if (!audioContext) {
+                            initAudioContext();
+                        } else {
+                            // If context already exists but was disconnected, reconnect it
+                            try {
+                                if (audioContext.state === 'suspended') {
+                                    audioContext.resume();
+                                }
+                            } catch (e) {
+                                console.log('Audio context resume error:', e);
+                                // If there's an error with existing context, create a new one
+                                initAudioContext();
+                            }
+                        }
+                        
+                        // Wait a bit to ensure resources are loaded, then play
+                        setTimeout(() => {
+                            audio.play()
+                                .then(() => {
+                                    statusDisplay.textContent = 'Playing test song';
+                                })
+                                .catch(err => {
+                                    console.error('Error playing audio:', err);
+                                    statusDisplay.textContent = `Error: ${err.message}`;
+                                });
+                        }, 100);
+                    });
+                    testSongsList.appendChild(button);
+                });
+            } catch (error) {
+                console.error('Error loading test songs:', error);
+                testSongsLoading.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        loadTestSongs();
+
+        // Update seek bar as audio plays
         audio.addEventListener('timeupdate', () => {
             if (!audio.duration) return;
             seekBar.value = (audio.currentTime / audio.duration) * 100;
         });
 
-        // Seek to a new position when the seek bar is changed
+        // Seek to position when user interacts with seek bar
         seekBar.addEventListener('input', () => {
             if (!audio.duration) return;
             audio.currentTime = (seekBar.value / 100) * audio.duration;
@@ -263,8 +540,8 @@
         function togglePlayPause() {
             if (audio.paused) {
                 audio.play();
-                playPauseButton.textContent = 'Pause'; // Keep text for now
-                playPauseButton.classList.add('playing'); // Add class for potential styling
+                playPauseButton.textContent = 'Pause';
+                playPauseButton.classList.add('playing');
             } else {
                 audio.pause();
                 playPauseButton.textContent = 'Play';
@@ -277,10 +554,9 @@
             audio.currentTime = 0;
             playPauseButton.textContent = 'Play';
             playPauseButton.classList.remove('playing');
-            // Reset seek bar visually
-            if (seekBar) { // Check if seekBar exists
-                seekBar.value = 0;
-            }
+            
+            // Reset seek bar position
+            seekBar.value = 0;
         }
         
         function updateVolume() {
@@ -396,22 +672,25 @@
             }
         });
 
-        // Drag and drop event listeners
+        // Drag and drop event listeners for TOP area
         dropArea.addEventListener('dragover', (event) => {
             event.preventDefault();
             dropArea.style.backgroundColor = '#f0f0f0';
         });
-        
+
         dropArea.addEventListener('dragleave', () => {
             dropArea.style.backgroundColor = '';
         });
-        
+
         dropArea.addEventListener('drop', handleDrop);
 
         async function handleDrop(event) {
             event.preventDefault();
+            // Reset background for BOTH drop areas
             dropArea.style.backgroundColor = '';
-            dropArea.style.display = 'none'; // Hide drop area after drop
+
+            // Hide the TOP drop area if it's still visible
+            dropArea.style.display = 'none';
 
             const file = event.dataTransfer.files[0];
             if (!file) return;
@@ -471,6 +750,204 @@
                 stopAudioButton.disabled = true;
             }
         }
+
+        fileUpload.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Display the name of the file
+            fileNameDisplay.textContent = `Processing: ${file.name}`;
+            statusDisplay.textContent = 'Uploading file...';
+
+            // Reset audio controls
+            stopAudio();
+            playPauseButton.disabled = true;
+            stopAudioButton.disabled = true;
+
+            try {
+                // Create a FormData object to send the file
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // Upload the file to the server
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Unknown error');
+                }
+
+                // Get response data including task ID
+                const data = await response.json();
+                currentTaskId = data.task_id;
+
+                // Enable stop button now that processing has started
+                stopButton.disabled = false;
+
+                // File uploaded successfully
+                statusDisplay.textContent = 'File uploaded, processing on server...';
+                isProcessingRemote = true;
+
+                // Also play locally for the user
+                const fileURL = URL.createObjectURL(file);
+                audio.src = fileURL;
+                fileNameDisplay.textContent = `Playing: ${file.name}`;
+
+                // Initialize Web Audio API for local visualization
+                if (!audioContext) {
+                    initAudioContext();
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                statusDisplay.textContent = `Error: ${error.message}`;
+                fileNameDisplay.textContent = 'Upload failed';
+                stopButton.disabled = true;
+                playPauseButton.disabled = true;
+                stopAudioButton.disabled = true;
+
+                logger.error(`File upload error: ${error.message}`);
+            }
+        });
+
+        bottomFileUpload.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Display the name of the file
+            fileNameDisplay.textContent = `Processing: ${file.name}`;
+            statusDisplay.textContent = 'Uploading file...';
+
+            // Reset audio controls
+            stopAudio();
+            playPauseButton.disabled = true;
+            stopAudioButton.disabled = true;
+
+            try {
+                // Create a FormData object to send the file
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // Upload the file to the server
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Unknown error');
+                }
+
+                // Get response data including task ID
+                const data = await response.json();
+                currentTaskId = data.task_id;
+
+                // Enable stop button now that processing has started
+                stopButton.disabled = false;
+
+                // File uploaded successfully
+                statusDisplay.textContent = 'File uploaded, processing on server...';
+                isProcessingRemote = true;
+
+                // Also play locally for the user
+                const fileURL = URL.createObjectURL(file);
+                audio.src = fileURL;
+                fileNameDisplay.textContent = `Playing: ${file.name}`;
+
+                // Initialize Web Audio API for local visualization
+                if (!audioContext) {
+                    initAudioContext();
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                statusDisplay.textContent = `Error: ${error.message}`;
+                fileNameDisplay.textContent = 'Upload failed';
+                stopButton.disabled = true;
+                playPauseButton.disabled = true;
+                stopAudioButton.disabled = true;
+
+                logger.error(`File upload error: ${error.message}`);
+            }
+        });
+
+        bottomDropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            bottomDropArea.style.backgroundColor = '#f0f0f0';
+        });
+
+        bottomDropArea.addEventListener('dragleave', () => {
+            bottomDropArea.style.backgroundColor = '';
+        });
+
+        bottomDropArea.addEventListener('drop', async (event) => {
+            event.preventDefault();
+            bottomDropArea.style.backgroundColor = '';
+
+            const file = event.dataTransfer.files[0];
+            if (!file) return;
+
+            // Display the name of the file
+            fileNameDisplay.textContent = `Processing: ${file.name}`;
+            statusDisplay.textContent = 'Uploading file...';
+
+            // Reset audio controls
+            stopAudio();
+            playPauseButton.disabled = true;
+            stopAudioButton.disabled = true;
+
+            try {
+                // Create a FormData object to send the file
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // Upload the file to the server
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Unknown error');
+                }
+
+                // Get response data including task ID
+                const data = await response.json();
+                currentTaskId = data.task_id;
+
+                // Enable stop button now that processing has started
+                stopButton.disabled = false;
+
+                // File uploaded successfully
+                statusDisplay.textContent = 'File uploaded, processing on server...';
+                isProcessingRemote = true;
+
+                // Also play locally for the user
+                const fileURL = URL.createObjectURL(file);
+                audio.src = fileURL;
+                fileNameDisplay.textContent = `Playing: ${file.name}`;
+
+                // Initialize Web Audio API for local visualization
+                if (!audioContext) {
+                    initAudioContext();
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                statusDisplay.textContent = `Error: ${error.message}`;
+                fileNameDisplay.textContent = 'Upload failed';
+                stopButton.disabled = true;
+                playPauseButton.disabled = true;
+                stopAudioButton.disabled = true;
+
+                logger.error(`File upload error: ${error.message}`);
+            }
+        });
 
         function initAudioContext() {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
