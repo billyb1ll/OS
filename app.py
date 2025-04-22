@@ -257,7 +257,7 @@ def handle_disconnect():
 if __name__ == "__main__":
     logger.info(
         f"Starting server with {thread_executor._max_workers} worker threads")
-    socketio.run(app, debug=True, host='0.0.0.0', port=5001)
+    socketio.run(app, debug=True, host='0.0.0.0')
     # Clean up threads when the application exits
     thread_executor.shutdown()
     logger.info("Server shutting down, cleaning up thread pool")

@@ -1,5 +1,5 @@
 Flask
 Flask-SocketIO
-Pydub
+pydub==0.25.1
 numpy
 gunicorn
