@@ -19,5 +19,5 @@ ENV PORT=8080
 # Expose the port the app runs on
 EXPOSE ${PORT}
 
-# Command to run the application - use shell form to ensure environment variable expansion
-CMD gunicorn --workers=2 --bind=0.0.0.0:$PORT app:app
+# Command to run the application - use sh -c to handle environment variable expansion
+CMD ["sh", "-c", "gunicorn --workers=2 --bind=0.0.0.0:$PORT app:app"]
