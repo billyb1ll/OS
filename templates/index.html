@@ -10,121 +10,212 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #ffffff; /* White background */
-            color: #000;
+            background-color: #f0f0f0; /* Lighter background */
+            color: #333;
+            padding-top: 20px;
+        }
+        #player-container {
+            width: 800px; /* Match canvas width */
+            background-color: #fff; /* White background for the player area */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden; /* Keep elements contained */
         }
         #drop-area {
             border: 2px dashed #ccc;
             padding: 50px;
-            width: 300px;
+            width: calc(100% - 104px); /* Adjust width considering padding */
             text-align: center;
-            margin-top: 50px;
+            margin: 20px auto; /* Center the drop area */
             color: #666;
+            background-color: #fafafa;
+            border-radius: 4px;
         }
         #canvas {
-            margin-top: 20px;
-            background-color: #ffffff; /* Match the body background */
+            display: block; /* Remove extra space below canvas */
+            background-color: #000; /* Black background for visualizer */
+            width: 100%; /* Make canvas fill container width */
         }
         audio {
             display: none; /* Hide the audio element */
         }
         #status {
-            margin-top: 20px;
+            margin-top: 10px;
             font-style: italic;
             color: #666;
+            text-align: center;
+            width: 100%;
         }
-        #controls {
-            margin-top: 20px;
+        #controls-bar {
+            background-color: #282828; /* Dark background for controls */
+            padding: 10px 15px;
+            color: #fff;
+        }
+        #seek-bar-container {
+            padding: 5px 0;
+        }
+        #seek-bar {
+            width: 100%;
+            cursor: pointer;
+            height: 5px; /* Thinner seek bar */
+            appearance: none; /* Override default look */
+            background: #555; /* Track background */
+            border-radius: 3px;
+            outline: none;
+        }
+        /* Style seek bar thumb */
+        #seek-bar::-webkit-slider-thumb {
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #e50914; /* YouTube-like red */
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        #seek-bar::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            background: #e50914;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        #main-controls {
             display: flex;
-            gap: 10px;
             align-items: center;
+            gap: 15px; /* Space between control groups */
             flex-wrap: wrap;
-            justify-content: center;
+            justify-content: space-between; /* Distribute space */
         }
         .control-group {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin: 5px 0;
+            gap: 8px; /* Smaller gap within groups */
+        }
+        .left-controls, .right-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
         button {
-            padding: 10px 20px;
+            padding: 8px 12px; /* Slightly smaller buttons */
             cursor: pointer;
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
+            background-color: transparent; /* Transparent background */
+            border: none; /* No border */
+            color: #fff; /* White text/icons */
+            font-size: 18px; /* Larger font size for icon-like feel */
             border-radius: 4px;
-            font-size: 16px;
-            min-width: 100px;
+            transition: background-color 0.2s ease;
+        }
+        button:hover {
+            background-color: rgba(255, 255, 255, 0.2); /* Subtle hover effect */
         }
         button:disabled {
-            background-color: #cccccc;
-            color: #666666;
-            border-color: #bbbbbb;
+            color: #888; /* Dim disabled buttons */
+            background-color: transparent;
             cursor: not-allowed;
         }
-        #stop-button {
-            background-color: #ff6b6b;
-            color: white;
-            border-color: #ff4040;
-        }
-        #play-pause-button {
-            background-color: #4CAF50;
-            color: white;
-            border-color: #45a049;
-        }
-        #stop-audio-button {
-            background-color: #ff9800;
-            color: white;
-            border-color: #e68a00;
-        }
+        /* Specific button styles (optional, could use icons) */
+        #play-pause-button::before { content: '▶'; margin-right: 5px; } /* Simple play icon */
+        #play-pause-button.playing::before { content: '❚❚'; margin-right: 5px; } /* Simple pause icon */
+        #stop-audio-button::before { content: '■'; margin-right: 5px; } /* Simple stop icon */
+
         label {
-            font-size: 14px;
-            margin-right: 5px;
+            font-size: 13px;
+            margin-right: 0;
+            color: #ccc;
         }
         input[type="range"] {
-            width: 100px;
+            width: 80px; /* Smaller range inputs */
+            height: 4px;
+            cursor: pointer;
+            appearance: none;
+            background: #555;
+            border-radius: 2px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #fff; /* White thumb */
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
         }
         .value-display {
-            min-width: 40px;
-            text-align: center;
-            font-size: 14px;
+            min-width: 35px;
+            text-align: right;
+            font-size: 13px;
+            color: #ccc;
         }
         .time-display {
             font-family: monospace;
-            font-size: 16px;
-            margin: 0 10px;
+            font-size: 14px;
+            color: #fff;
         }
+        #file-name {
+            text-align: center;
+            padding: 10px;
+            font-size: 16px;
+            color: #333;
+            background-color: #eee; /* Light background for file name */
+            border-bottom: 1px solid #ddd;
+        }
+        /* Hide stop processing button for now */
+        #stop-button { display: none; }
+
     </style>
 </head>
 <body>
     <h1>Music Visualizer</h1>
-    <h2 id="file-name">No file playing</h2> <!-- File name heading -->
+
     <div id="drop-area">
         <p>Drag and drop an MP3 file here</p>
     </div>
-    <div id="controls">
-        <div class="control-group">
-            <button id="play-pause-button" disabled>Play</button>
-            <button id="stop-audio-button" disabled>Stop</button>
-            <span class="time-display" id="time-display">00:00 / 00:00</span>
-        </div>
-        <div class="control-group">
-            <label for="volume-control">Volume:</label>
-            <input type="range" id="volume-control" min="0" max="1" step="0.01" value="1">
-            <span class="value-display" id="volume-display">100%</span>
-        </div>
-        <div class="control-group">
-            <label for="speed-control">Speed:</label>
-            <input type="range" id="speed-control" min="0.5" max="2" step="0.1" value="1">
-            <span class="value-display" id="speed-display">1.0x</span>
-        </div>
-        <div class="control-group">
-            <button id="stop-button" disabled>Stop Processing</button>
+
+    <div id="player-container">
+        <h2 id="file-name">No file playing</h2> <!-- File name heading -->
+        <canvas id="canvas" width="800" height="300"></canvas> <!-- Adjusted height -->
+        <div id="controls-bar">
+            <div id="seek-bar-container">
+                <input type="range" id="seek-bar" min="0" max="100" step="0.1" value="0">
+            </div>
+            <div id="main-controls">
+                <div class="left-controls">
+                    <button id="play-pause-button" disabled>Play</button>
+                    <button id="stop-audio-button" disabled>Stop</button>
+                    <span class="time-display" id="time-display">00:00 / 00:00</span>
+                </div>
+                <div class="right-controls">
+                    <div class="control-group">
+                        <label for="volume-control">Volume:</label> <!-- Consider replacing with an icon -->
+                        <input type="range" id="volume-control" min="0" max="1" step="0.01" value="1">
+                        <span class="value-display" id="volume-display">100%</span>
+                    </div>
+                    <div class="control-group">
+                        <label for="speed-control">Speed:</label>
+                        <input type="range" id="speed-control" min="0.5" max="2" step="0.1" value="1">
+                        <span class="value-display" id="speed-display">1.0x</span>
+                    </div>
+                    <!-- Stop processing button is hidden via CSS for now -->
+                    <button id="stop-button" disabled>Stop Processing</button>
+                </div>
+            </div>
         </div>
     </div>
+
     <div id="status">Ready</div>
-    <canvas id="canvas" width="800" height="400"></canvas>
-    <audio id="audio" controls></audio> <!-- Hidden audio element for Web Audio API -->
+    <audio id="audio"></audio> <!-- Removed 'controls' attribute -->
 
     <script>
         const dropArea = document.getElementById('drop-area');
@@ -141,6 +232,7 @@
         const speedControl = document.getElementById('speed-control');
         const speedDisplay = document.getElementById('speed-display');
         const timeDisplay = document.getElementById('time-display');
+        const seekBar = document.getElementById('seek-bar');
         
         // Initialize socket.io connection
         const socket = io();
@@ -155,14 +247,28 @@
         stopAudioButton.addEventListener('click', stopAudio);
         volumeControl.addEventListener('input', updateVolume);
         speedControl.addEventListener('input', updateSpeed);
+
+        // Update seek bar as the audio plays
+        audio.addEventListener('timeupdate', () => {
+            if (!audio.duration) return;
+            seekBar.value = (audio.currentTime / audio.duration) * 100;
+        });
+
+        // Seek to a new position when the seek bar is changed
+        seekBar.addEventListener('input', () => {
+            if (!audio.duration) return;
+            audio.currentTime = (seekBar.value / 100) * audio.duration;
+        });
         
         function togglePlayPause() {
             if (audio.paused) {
                 audio.play();
-                playPauseButton.textContent = 'Pause';
+                playPauseButton.textContent = 'Pause'; // Keep text for now
+                playPauseButton.classList.add('playing'); // Add class for potential styling
             } else {
                 audio.pause();
                 playPauseButton.textContent = 'Play';
+                playPauseButton.classList.remove('playing');
             }
         }
         
@@ -170,6 +276,11 @@
             audio.pause();
             audio.currentTime = 0;
             playPauseButton.textContent = 'Play';
+            playPauseButton.classList.remove('playing');
+            // Reset seek bar visually
+            if (seekBar) { // Check if seekBar exists
+                seekBar.value = 0;
+            }
         }
         
         function updateVolume() {
@@ -196,14 +307,21 @@
         // Set up audio events
         audio.addEventListener('play', () => {
             playPauseButton.textContent = 'Pause';
+            playPauseButton.classList.add('playing');
         });
         
         audio.addEventListener('pause', () => {
             playPauseButton.textContent = 'Play';
+            playPauseButton.classList.remove('playing');
         });
         
         audio.addEventListener('ended', () => {
             playPauseButton.textContent = 'Play';
+            playPauseButton.classList.remove('playing');
+            // Reset seek bar visually
+            if (seekBar) { // Check if seekBar exists
+                seekBar.value = 0;
+            }
         });
         
         audio.addEventListener('loadedmetadata', () => {
@@ -293,7 +411,8 @@
         async function handleDrop(event) {
             event.preventDefault();
             dropArea.style.backgroundColor = '';
-            
+            dropArea.style.display = 'none'; // Hide drop area after drop
+
             const file = event.dataTransfer.files[0];
             if (!file) return;
             
@@ -377,15 +496,23 @@
             // Get frequency data from the analyser
             analyser.getByteFrequencyData(dataArray);
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Use canvas dimensions
+            const width = canvas.width;
+            const height = canvas.height;
+            ctx.clearRect(0, 0, width, height);
 
-            const barWidth = (canvas.width / dataArray.length) * 2.5;
+            const barWidth = (width / dataArray.length) * 1.5; // Adjusted bar width calculation
             let x = 0;
 
             for (let i = 0; i < dataArray.length; i++) {
-                const barHeight = dataArray[i];
-                ctx.fillStyle = `rgb(0, 0, 0)`;  // Set bars to black
-                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                const barHeight = (dataArray[i] / 255) * height; // Scale bar height to canvas height
+                // Gradient or solid color for bars
+                const gradient = ctx.createLinearGradient(0, height, 0, height - barHeight);
+                gradient.addColorStop(0, '#e50914'); // Red at the bottom
+                gradient.addColorStop(1, '#f8a1a6'); // Lighter red at the top
+                ctx.fillStyle = gradient;
+                // ctx.fillStyle = `#e50914`; // Solid red alternative
+                ctx.fillRect(x, height - barHeight, barWidth, barHeight);
 
                 x += barWidth + 1; // Add 1 for spacing
             }
