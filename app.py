@@ -263,13 +263,13 @@ if __name__ == "__main__":
     try:
         port = int(os.environ.get("PORT", 8080))  # Default to 8080 if PORT is not set
         logger.info(f"Server starting on port {port}")
-        socketio.run(app, debug=True, host="0.0.0.0", port=port)
+        socketio.run(app, debug=True, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
     except ValueError as e:
         logger.error(f"Invalid port configuration: {e}")
         # Fallback to a default port
         port = 8080
         logger.info(f"Falling back to default port {port}")
-        socketio.run(app, debug=True, host="0.0.0.0", port=port)
+        socketio.run(app, debug=True, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
     # Clean up threads when the application exits
     thread_executor.shutdown()
     logger.info("Server shutting down, cleaning up thread pool")

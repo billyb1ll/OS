@@ -46,10 +46,10 @@ _original_re_match = re.match
 def patched_re_match(pattern, string, *args, **kwargs):
     """Patch re.match to fix the invalid escape sequences"""
     pattern_fixes = {
-        '([su]([0-9]{1,2})p?) \(([0-9]{1,2}) bit\)$': r'([su]([0-9]{1,2})p?) \(([0-9]{1,2}) bit\)$',
-        '([su]([0-9]{1,2})p?)( \(default\))?$': r'([su]([0-9]{1,2})p?)( \(default\))?$',
-        '(flt)p?( \(default\))?$': r'(flt)p?( \(default\))?$',
-        '(dbl)p?( \(default\))?$': r'(dbl)p?( \(default\))?$',
+        r'([su]([0-9]{1,2})p?) \(([0-9]{1,2}) bit\)$': r'([su]([0-9]{1,2})p?) \(([0-9]{1,2}) bit\)$',
+        r'([su]([0-9]{1,2})p?)( \(default\))?$': r'([su]([0-9]{1,2})p?)( \(default\))?$',
+        r'(flt)p?( \(default\))?$': r'(flt)p?( \(default\))?$',
+        r'(dbl)p?( \(default\))?$': r'(dbl)p?( \(default\))?$',
     }
     
     if pattern in pattern_fixes:
