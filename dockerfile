@@ -13,8 +13,11 @@ COPY . /app
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Set default port if not provided
+ENV PORT=8080
+
 # Expose the port the app runs on
-EXPOSE $PORT
+EXPOSE ${PORT}
 
 # Command to run the application
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:$PORT", "app:app"]
+CMD gunicorn -w 4 -b 0.0.0.0:${PORT} app:app

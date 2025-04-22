@@ -258,8 +258,16 @@ def handle_disconnect():
 if __name__ == "__main__":
     logger.info(
         f"Starting server with {thread_executor._max_workers} worker threads")
-    port = int(os.environ.get("PORT", 8080))  # Default to 8080 if PORT is not set
-    socketio.run(app, debug=True, host="0.0.0.0", port=port)
+    try:
+        port = int(os.environ.get("PORT", 8080))  # Default to 8080 if PORT is not set
+        logger.info(f"Server starting on port {port}")
+        socketio.run(app, debug=True, host="0.0.0.0", port=port)
+    except ValueError as e:
+        logger.error(f"Invalid port configuration: {e}")
+        # Fallback to a default port
+        port = 8080
+        logger.info(f"Falling back to default port {port}")
+        socketio.run(app, debug=True, host="0.0.0.0", port=port)
     # Clean up threads when the application exits
     thread_executor.shutdown()
     logger.info("Server shutting down, cleaning up thread pool")
