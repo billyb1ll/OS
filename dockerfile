@@ -19,5 +19,5 @@ ENV PORT=8080
 # Expose the port the app runs on
 EXPOSE ${PORT}
 
-# Command to run the application
-CMD ["gunicorn", "--workers=4", "--bind=0.0.0.0:${PORT}", "app:app"]
+# Command to run the application - optimized for small server (1 shared vCPU)
+CMD ["gunicorn", "--workers=2", "--bind=0.0.0.0:${PORT}", "app:app"]
