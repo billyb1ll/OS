@@ -13,11 +13,6 @@ COPY . /app
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Set default port if not provided
-ENV PORT=8080
-
-# Expose the port the app runs on
-EXPOSE ${PORT}
 
 # Command to run the application - use sh -c to handle environment variable expansion
-CMD ["sh", "-c", "gunicorn --workers=2 --bind=0.0.0.0:$PORT app:app"]
+CMD ["sh", "-c", "gunicorn --workers=2 --bind=0.0.0.0:8080 app:app"]
