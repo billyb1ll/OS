@@ -328,7 +328,7 @@ if __name__ == "__main__":
     logger.info(
         f"Starting server with {thread_executor._max_workers} worker threads")
     try:
-        port = int(os.environ.get("PORT", 5050))  # Default port if not specified
+        port = 5000 # Default port if not specified
         logger.info(f"Server starting on port {port}")
         socketio.run(app, debug=True, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
     except ValueError as e:
