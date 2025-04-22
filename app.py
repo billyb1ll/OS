@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO
+# Import pydub_patch before pydub to fix import errors
+import pydub_patch
 from pydub import AudioSegment
 import numpy as np
 import io
