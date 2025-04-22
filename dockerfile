@@ -13,6 +13,5 @@ COPY . /app
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-
-# Command to run the application - use sh -c to handle environment variable expansion
-CMD ["sh", "-c", "gunicorn --workers=2 --bind=0.0.0.0:8080 app:app"]
+# Command to run the application - use PORT env variable
+CMD ["sh", "-c", "gunicorn --workers=2 --bind=0.0.0.0:${PORT:-8080} app:app"]
