@@ -13,6 +13,8 @@ import logging
 import uuid
 import os
 import shutil
+import psutil  # For system monitoring
+import json
 
 # Configure logging for debugging - include timestamp and thread name
 logging.basicConfig(
@@ -113,7 +115,7 @@ def get_test_song(song_id):
         return jsonify({"error": str(e)}), 500
 
 
-def process_chunk(chunk_index, chunk, result_queue, task_id):
+def process_chunk(chunk_index, chunk, result_queue, task_id, chunk_size="medium"):
     """Process a single audio chunk in a separate thread"""
     thread_id = threading.current_thread().name
     start_time = time.time()
@@ -126,11 +128,66 @@ def process_chunk(chunk_index, chunk, result_queue, task_id):
 
     logger.info(
         f"Thread {thread_id} starting to process chunk {chunk_index} of size {len(chunk)}")
-
-    # Normalize chunk (main processing logic)
-    processed_chunk = chunk.tolist()
+    
+    # Collect CPU and memory data before processing
+    cpu_before = psutil.cpu_percent(interval=0.1)
+    mem_before = psutil.virtual_memory().percent
+    
+    # Actual audio processing - analyze frequency data
+    try:
+        # Convert to frequency domain using FFT
+        fft_data = np.abs(np.fft.rfft(chunk))
+        
+        # Normalize FFT data for visualization
+        if len(fft_data) > 0:
+            fft_data = fft_data / np.max(fft_data) if np.max(fft_data) > 0 else fft_data
+        
+        # Based on chunk size setting, adjust the resolution
+        if chunk_size == "small":
+            fft_data = fft_data[::4]  # Take every 4th value - lower resolution
+        elif chunk_size == "medium":
+            fft_data = fft_data[::2]  # Take every 2nd value - medium resolution
+        else:  # large or default
+            pass  # Keep full resolution
+        
+        # Limit the size to prevent large payloads
+        max_points = 256
+        if len(fft_data) > max_points:
+            # Keep max_points points by downsampling
+            step = len(fft_data) // max_points
+            fft_data = fft_data[::step][:max_points]
+        
+        # Ensure we have exactly the right number of points for visualization
+        if len(fft_data) > max_points:
+            fft_data = fft_data[:max_points]
+        
+        # Convert to list for JSON serialization
+        processed_data = fft_data.tolist()
+        
+    except Exception as e:
+        logger.error(f"Error processing chunk {chunk_index}: {str(e)}")
+        processed_data = []
 
     processing_time = (time.time() - start_time) * 1000  # ms
+    
+    # Collect CPU and memory data after processing
+    cpu_after = psutil.cpu_percent(interval=0.1)
+    mem_after = psutil.virtual_memory().percent
+    
+    # Calculate system metrics for this processing operation
+    metrics = {
+        "chunk_index": chunk_index,
+        "processing_time_ms": processing_time,
+        "cpu_usage_before": cpu_before,
+        "cpu_usage_after": cpu_after,
+        "cpu_usage_delta": cpu_after - cpu_before,
+        "memory_usage_before": mem_before,
+        "memory_usage_after": mem_after,
+        "memory_usage_delta": mem_after - mem_before,
+        "chunk_size": len(chunk),
+        "output_size": len(processed_data),
+        "timestamp": time.time()
+    }
     
     # Check if task was cancelled during processing
     if task_id not in active_tasks or active_tasks[task_id]['stop_requested']:
@@ -139,7 +196,11 @@ def process_chunk(chunk_index, chunk, result_queue, task_id):
         return
 
     # Queue the result for ordered emission
-    result_queue.put((chunk_index, processed_chunk))
+    result_queue.put((chunk_index, {
+        "data": processed_data, 
+        "metrics": metrics
+    }))
+    
     logger.info(
         f"Thread {thread_id} finished processing chunk {chunk_index} in {processing_time:.2f}ms")
 
