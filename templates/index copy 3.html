@@ -840,13 +840,6 @@
 							<div class="metric-value" id="chunks-processed">0</div>
 							<div class="metric-detail" id="processing-rate">0 chunks/sec</div>
 						</div>
-						<div class="metric-box server-metric">
-							<div class="metric-name">Current Chunk Size</div>
-							<div class="metric-value" id="current-chunk-size">Medium</div>
-							<div class="metric-detail" id="chunk-size-detail">
-								Processing in medium chunks
-							</div>
-						</div>
 					</div>
 				</div>
 
@@ -1013,6 +1006,17 @@
 
 				<div class="setting-row">
 					<div class="setting-label">
+						<span class="setting-name">Background Color</span>
+						<span class="setting-description">Set the visualization background</span>
+					</div>
+					<div class="setting-controls">
+						<input type="color" id="bg-color-picker" value="#000000" />
+						<span class="value-display" id="bg-color-display">#000000</span>
+					</div>
+				</div>
+
+				<div class="setting-row">
+					<div class="setting-label">
 						<span class="setting-name">Smoothing</span>
 						<span class="setting-description">Control visualization smoothness</span>
 					</div>
@@ -1044,6 +1048,20 @@
 							step="1"
 							value="3" />
 						<span class="value-display" id="bar-width-display">3px</span>
+					</div>
+				</div>
+
+				<div class="setting-row">
+					<div class="setting-label">
+						<span class="setting-name">Visualization Style</span>
+						<span class="setting-description">Choose visualization style</span>
+					</div>
+					<div class="setting-controls">
+						<select id="viz-style">
+							<option value="bars">Bars</option>
+							<option value="wave">Waveform</option>
+							<option value="circle">Circular</option>
+						</select>
 					</div>
 				</div>
 			</div>
@@ -1338,19 +1356,6 @@
 					chunkSizeButtons.forEach((btn) => btn.classList.remove("active"));
 					e.target.classList.add("active");
 					visualizerSettings.chunkSize = e.target.id.replace("chunk-", "");
-
-					// Update the Current Chunk Size display in performance monitor
-					const currentChunkSizeElement =
-						document.getElementById("current-chunk-size");
-					const chunkSizeDetailElement =
-						document.getElementById("chunk-size-detail");
-
-					// Update with capitalized chunk size
-					const capitalizedSize =
-						visualizerSettings.chunkSize.charAt(0).toUpperCase() +
-						visualizerSettings.chunkSize.slice(1);
-					currentChunkSizeElement.textContent = capitalizedSize;
-					chunkSizeDetailElement.textContent = `Processing in ${visualizerSettings.chunkSize} chunks`;
 				});
 			});
 
@@ -2128,11 +2133,10 @@
 
 				// Update CPU and memory usage
 				cpuUsageElement.textContent = `${Math.round(serverMetrics.cpuUsage)}%`;
-				memoryUsageElement.textContent = `${Math.round(
+				memoryUsageElement.textContent = `${Mathround(
 					serverMetrics.memoryUsage / 1024 / 1024
 				)} MB`;
 
-				//```django-html
 				// Update chunks processed
 				chunksProcessedElement.textContent = serverMetrics.chunksProcessed;
 
