@@ -26,9 +26,32 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app with static folder configuration
 app = Flask(__name__, static_url_path='/static', static_folder='static')
-# Configure socketio with async_mode based on environment
-# DigitalOcean App Platform works best with gevent
-async_mode = os.environ.get('SOCKET_MODE', 'eventlet')
+
+# Configure SocketIO with proper async_mode handling
+# Default to threading which should always work
+default_async_mode = 'threading'
+requested_mode = os.environ.get('SOCKET_MODE', default_async_mode)
+
+# Try to determine best available async_mode
+if requested_mode == 'eventlet':
+    try:
+        import eventlet
+        async_mode = 'eventlet'
+    except ImportError:
+        logger.warning("eventlet not available, falling back to threading")
+        async_mode = default_async_mode
+elif requested_mode == 'gevent':
+    try:
+        import gevent
+        async_mode = 'gevent'
+    except ImportError:
+        logger.warning("gevent not available, falling back to threading")
+        async_mode = default_async_mode
+else:
+    # Use the requested mode (threading or other valid mode)
+    async_mode = requested_mode
+
+logger.info(f"Using SocketIO async_mode: {async_mode}")
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode=async_mode)
 thread_executor = ThreadPoolExecutor(
     max_workers=4, thread_name_prefix="Worker")
@@ -412,12 +435,14 @@ if __name__ == "__main__":
         # Use production-ready configuration for deployment
         if os.environ.get('ENVIRONMENT') == 'production':
             # In production, let gunicorn handle the app
-            logger.info("Running in production mode - Gunicorn will manage the server")
+            logger.info(
+                "Running in production mode - Gunicorn will manage the server")
         else:
             # In development, use socketio.run
-            logger.info(f"Running in development mode with {async_mode} async mode")
+            logger.info(
+                f"Running in development mode with {async_mode} async mode")
             socketio.run(app, debug=False, host="0.0.0.0",
-                     port=port, allow_unsafe_werkzeug=True)
+                         port=port, allow_unsafe_werkzeug=True)
     except Exception as e:
         logger.error(f"Error starting server: {str(e)}")
     finally:
