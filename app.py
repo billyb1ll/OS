@@ -26,7 +26,10 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app with static folder configuration
 app = Flask(__name__, static_url_path='/static', static_folder='static')
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Configure socketio with async_mode based on environment
+# DigitalOcean App Platform works best with gevent
+async_mode = os.environ.get('SOCKET_MODE', 'eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode=async_mode)
 thread_executor = ThreadPoolExecutor(
     max_workers=4, thread_name_prefix="Worker")
 
@@ -40,31 +43,36 @@ TEST_SONGS_DIR = os.path.join(app.static_folder, 'audio')
 os.makedirs(TEST_SONGS_DIR, exist_ok=True)
 
 # Check if test song exists and create a default one if needed
+
+
 def initialize_test_songs():
     """Initialize a default test song if no songs exist in the folder"""
     try:
         # Create test song if the directory is empty
         if not os.listdir(TEST_SONGS_DIR):
-            logger.info("No songs found in audio directory. Creating default test song...")
-            
+            logger.info(
+                "No songs found in audio directory. Creating default test song...")
+
             default_test_song = os.path.join(TEST_SONGS_DIR, 'test_song.mp3')
-            
+
             # Create a simple test tone
             sample_rate = 44100  # 44.1kHz sample rate
             duration_ms = 5000   # 5 seconds
-            
+
             # Generate simple sine wave test tone
             sine_sample = AudioSegment.silent(duration=duration_ms)
             sine_sample = sine_sample.set_frame_rate(sample_rate)
-            
+
             # Export as MP3
             sine_sample.export(default_test_song, format="mp3")
-            
+
             logger.info(f"Created test song at {default_test_song}")
         else:
-            logger.info(f"Found {len(os.listdir(TEST_SONGS_DIR))} songs in the test songs directory")
+            logger.info(
+                f"Found {len(os.listdir(TEST_SONGS_DIR))} songs in the test songs directory")
     except Exception as e:
         logger.error(f"Failed to initialize test song: {str(e)}")
+
 
 # Initialize test songs at startup
 initialize_test_songs()
@@ -84,16 +92,16 @@ def get_test_songs():
             if filename.lower().endswith(('.mp3', '.wav', '.ogg', '.aac', '.flac')):
                 # Get display name by removing extension and replacing underscores with spaces
                 display_name = os.path.splitext(filename)[0].replace('_', ' ')
-                
+
                 songs.append({
                     'id': filename,
                     'name': display_name,
                     'url': f'/static/audio/{filename}'
                 })
-        
+
         # Sort songs by name
         songs.sort(key=lambda x: x['name'])
-        
+
         logger.info(f"Found {len(songs)} audio files in test songs directory")
         return jsonify(songs)
     except Exception as e:
@@ -128,52 +136,54 @@ def process_chunk(chunk_index, chunk, result_queue, task_id, chunk_size="medium"
 
     logger.info(
         f"Thread {thread_id} starting to process chunk {chunk_index} of size {len(chunk)}")
-    
+
     # Collect CPU and memory data before processing
     cpu_before = psutil.cpu_percent(interval=0.1)
     mem_before = psutil.virtual_memory().percent
-    
+
     # Actual audio processing - analyze frequency data
     try:
         # Convert to frequency domain using FFT
         fft_data = np.abs(np.fft.rfft(chunk))
-        
+
         # Normalize FFT data for visualization
         if len(fft_data) > 0:
-            fft_data = fft_data / np.max(fft_data) if np.max(fft_data) > 0 else fft_data
-        
+            fft_data = fft_data / \
+                np.max(fft_data) if np.max(fft_data) > 0 else fft_data
+
         # Based on chunk size setting, adjust the resolution
         if chunk_size == "small":
             fft_data = fft_data[::4]  # Take every 4th value - lower resolution
         elif chunk_size == "medium":
-            fft_data = fft_data[::2]  # Take every 2nd value - medium resolution
+            # Take every 2nd value - medium resolution
+            fft_data = fft_data[::2]
         else:  # large or default
             pass  # Keep full resolution
-        
+
         # Limit the size to prevent large payloads
         max_points = 256
         if len(fft_data) > max_points:
             # Keep max_points points by downsampling
             step = len(fft_data) // max_points
             fft_data = fft_data[::step][:max_points]
-        
+
         # Ensure we have exactly the right number of points for visualization
         if len(fft_data) > max_points:
             fft_data = fft_data[:max_points]
-        
+
         # Convert to list for JSON serialization
         processed_data = fft_data.tolist()
-        
+
     except Exception as e:
         logger.error(f"Error processing chunk {chunk_index}: {str(e)}")
         processed_data = []
 
     processing_time = (time.time() - start_time) * 1000  # ms
-    
+
     # Collect CPU and memory data after processing
     cpu_after = psutil.cpu_percent(interval=0.1)
     mem_after = psutil.virtual_memory().percent
-    
+
     # Calculate system metrics for this processing operation
     metrics = {
         "chunk_index": chunk_index,
@@ -188,7 +198,7 @@ def process_chunk(chunk_index, chunk, result_queue, task_id, chunk_size="medium"
         "output_size": len(processed_data),
         "timestamp": time.time()
     }
-    
+
     # Check if task was cancelled during processing
     if task_id not in active_tasks or active_tasks[task_id]['stop_requested']:
         logger.info(
@@ -197,10 +207,10 @@ def process_chunk(chunk_index, chunk, result_queue, task_id, chunk_size="medium"
 
     # Queue the result for ordered emission
     result_queue.put((chunk_index, {
-        "data": processed_data, 
+        "data": processed_data,
         "metrics": metrics
     }))
-    
+
     logger.info(
         f"Thread {thread_id} finished processing chunk {chunk_index} in {processing_time:.2f}ms")
 
@@ -235,6 +245,8 @@ def upload_file():
             return jsonify({"error": "No file part"}), 400
 
         file = request.files['file']
+        chunk_size_setting = request.form.get(
+            'chunk_size', 'medium')  # Get chunk size from form data
         if file.filename == '':
             logger.error("No file selected")
             return jsonify({"error": "No file selected"}), 400
@@ -262,19 +274,25 @@ def upload_file():
         # Normalize to range -1.0 to 1.0 for consistent processing
         samples = samples.astype(float) / np.max(np.abs(samples))
 
+        # Determine number of chunks based on setting
+        chunk_split_map = {'small': 200, 'medium': 100, 'large': 50}
+        num_splits = chunk_split_map.get(
+            chunk_size_setting, 100)  # Default to 100 (medium)
+        print(chunk_split_map.get(chunk_size_setting))
         # Split into chunks for parallel processing
-        chunks = list(enumerate(np.array_split(samples, 100)))
+        chunks = list(enumerate(np.array_split(samples, num_splits)))
         result_queue = Queue()
 
         logger.info(
-            f"Starting parallel processing with {len(chunks)} chunks using {thread_executor._max_workers} worker threads")
+            f"Starting parallel processing with {len(chunks)} chunks (Size: {chunk_size_setting}) using {thread_executor._max_workers} worker threads")
 
         # Submit all chunks to thread pool
         futures = []
         submission_start = time.time()
         for i, chunk in chunks:
+            # Pass the chunk_size_setting to process_chunk
             future = thread_executor.submit(
-                process_chunk, i, chunk, result_queue, task_id)
+                process_chunk, i, chunk, result_queue, task_id, chunk_size_setting)
             futures.append(future)
 
         submission_time = time.time() - submission_start
@@ -308,7 +326,7 @@ def upload_file():
                         emitted_count += 1
 
                         # Log periodically to reduce console spam
-                        if emitted_count % 10 == 0:  
+                        if emitted_count % 10 == 0:
                             logger.info(
                                 f"Emitted chunk {idx} (In order) - {emitted_count}/{len(chunks)}")
 
@@ -382,7 +400,8 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    logger.info(f'Client disconnected - Thread: {threading.current_thread().name}')
+    logger.info(
+        f'Client disconnected - Thread: {threading.current_thread().name}')
 
 
 if __name__ == "__main__":
@@ -390,10 +409,18 @@ if __name__ == "__main__":
     logger.info(
         f"Starting server with {thread_executor._max_workers} worker threads on port {port}")
     try:
-        socketio.run(app, debug=True, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
+        # Use production-ready configuration for deployment
+        if os.environ.get('ENVIRONMENT') == 'production':
+            # In production, let gunicorn handle the app
+            logger.info("Running in production mode - Gunicorn will manage the server")
+        else:
+            # In development, use socketio.run
+            logger.info(f"Running in development mode with {async_mode} async mode")
+            socketio.run(app, debug=False, host="0.0.0.0",
+                     port=port, allow_unsafe_werkzeug=True)
     except Exception as e:
         logger.error(f"Error starting server: {str(e)}")
     finally:
-        # Clean up resources 
+        # Clean up resources
         thread_executor.shutdown()
         logger.info("Server shutting down, cleaning up thread pool")
