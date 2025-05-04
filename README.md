@@ -1,29 +1,40 @@
-# Audio Processing Server & Music Visualizer
+# Music Visualizer with Performance Monitoring
 
-This project is a Flask-based server for processing audio files in parallel using worker threads. It provides a web interface for uploading audio files, playing them with a YouTube-like player, and visualizing the audio frequencies in real-time. Flask-SocketIO is used for real-time communication.
+A web-based music visualizer that processes audio files, visualizes audio frequencies in real-time, and monitors system performance. Built with Flask, Flask-SocketIO, and modern web technologies.
 
 ## Features
 
-- **File Upload**: Drag and drop MP3 files for processing and playback.
-- **Web Player**: A YouTube-styled player interface with:
-    - Play/Pause and Stop controls.
-    - Volume and Playback Speed adjustments.
-    - Seek bar for navigating the audio track.
-    - Real-time time display (current / total).
-    - Displays the name of the currently playing file.
-- **Audio Visualizer**: Real-time frequency bar visualization of the playing audio.
-- **Parallel Processing (Backend)**: Splits audio into chunks and processes them in parallel using a thread pool (though this backend processing might not be directly visible in the current UI focus).
-- **Real-Time Updates (Backend)**: Uses WebSockets to potentially emit updates about backend processing status.
-- **Stop Processing (Backend)**: Allows stopping backend processing tasks.
+- **Advanced Audio Visualizer**: Real-time frequency visualization with customizable settings:
+  - Adjustable resolution (low to ultra high)
+  - Multiple color schemes (blue, red, green, rainbow, and custom)
+  - Smoothing controls for visual effects
+  - Adjustable bar width
+  
+- **Comprehensive Player Controls**:
+  - Play/Pause and Stop controls
+  - Volume and playback speed adjustments
+  - Seek bar for navigation
+  - Real-time progress display
 
-## Project Structure
+- **Performance Monitoring**:
+  - Server metrics (CPU usage, memory usage, processing time)
+  - Client metrics (frame rate, rendering time, memory usage)
+  - Network metrics (latency, data received, packet loss simulation)
+  
+- **File Management**:
+  - Drag and drop file upload
+  - Built-in test songs selection
+  - Multiple upload areas for convenience
+  
+- **Network Simulation**:
+  - Configurable network delay
+  - Simulated packet loss for testing
+  - Real-time impact visualization
 
-```
-app.py          # Main Flask server application
-templates/
-    index.html  # Web interface (Player & Visualizer)
-# ... other files (requirements.txt, etc.)
-```
+- **Parallel Processing (Backend)**:
+  - Configurable chunk size (small, medium, large)
+  - Threaded audio processing for performance
+  - Real-time status updates
 
 ## Requirements
 
@@ -37,8 +48,8 @@ templates/
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd <repository-folder>
+   git clone https://github.com/billyb1ll/OS.git
+   cd OS
    ```
 
 2. Install dependencies:
@@ -51,57 +62,94 @@ templates/
    python app.py
    ```
 
-4. Open your browser and navigate to `http://localhost:5001`.
+4. Open your browser and navigate to `http://localhost:5001` (or the configured port)
 
 ## Usage
 
-1. Run the server:
-   ```bash
-   python app.py
-   ```
-2. Open your browser and navigate to `http://localhost:5001`.
-3. Drag and drop an MP3 file onto the designated area.
-4. The file will load, and you can use the player controls to play, pause, seek, adjust volume, and change speed while viewing the visualization.
+### Basic Usage
+1. Open the application in your browser
+2. Either:
+   - Drag and drop an audio file onto the upload area
+   - Click "Upload File" to select a file from your device
+   - Choose one of the available test songs
 
-## API Endpoints (Backend)
+3. Use the player controls to play/pause, adjust volume, change speed, etc.
+4. Watch the real-time audio visualization
+
+### Advanced Settings
+
+#### Visualization Settings
+- **Resolution**: Adjust the frequency resolution (64px to 2048px)
+- **Color Scheme**: Choose from preset themes or create a custom color
+- **Smoothing**: Control the smoothness of visualization transitions (0 to 0.9)
+- **Bar Width**: Change the width of visualization bars (1px to 8px)
+
+#### Performance Settings
+- **Chunk Size**: Select processing chunk size (small, medium, large)
+- **Network Simulation**: Test with artificial network delays and packet loss
+
+## Performance Monitoring
+
+The application includes real-time monitoring of:
+
+- **Server Performance**:
+  - CPU and memory usage
+  - Processing time per chunk
+  - Total chunks processed
+  
+- **Client Performance**:
+  - Frame rate (FPS)
+  - Rendering time
+  - Client-side memory usage
+  - Visualization smoothness
+  
+- **Network Performance**:
+  - Latency
+  - Data received
+  - Packet statistics
+
+## API Endpoints
 
 ### `/`
 - **Method**: GET
-- **Description**: Serves the main webpage.
+- **Description**: Serves the main webpage
 
 ### `/upload`
 - **Method**: POST
-- **Description**: Upload an audio file for processing.
-- **Request**: Multipart form-data with a `file` field.
-- **Response**: JSON with task details.
+- **Description**: Upload an audio file for processing
+- **Parameters**:
+  - `file`: The audio file to process
+  - `chunk_size`: Size of processing chunks (small, medium, large)
+- **Response**: JSON with task details
 
 ### `/stop-processing`
 - **Method**: POST
-- **Description**: Stops the processing of a specific task.
-- **Request**: JSON with `task_id` field.
-- **Response**: JSON with a success message.
+- **Description**: Stops the processing of a specific task
+- **Request**: JSON with `task_id` field
+- **Response**: JSON with a success message
 
-## WebSocket Events (Backend)
+### `/test-songs`
+- **Method**: GET
+- **Description**: Returns a list of available test songs
+- **Response**: JSON array of song objects with name and URL
 
-### `connect`
-- Triggered when a client connects.
+## WebSocket Events
 
-### `disconnect`
-- Triggered when a client disconnects.
+The application uses WebSockets for real-time communication:
 
-### `audio_chunk`
-- Emitted for each processed audio chunk.
+### Server to Client
+- `audio_chunk`: Sends processed audio chunk data
+- `processing_complete`: Notifies when processing is complete
+- `processing_stopped`: Notifies when processing is manually stopped
 
-### `processing_complete`
-- Emitted when processing is complete.
+### Client to Server
+- Connection events for managing WebSocket lifecycle
 
-### `processing_stopped`
-- Emitted when processing is stopped.
+## Browser Compatibility
 
-## Logging
+- Recommended: Chrome or Firefox for best performance
+- Works on most modern browsers with HTML5 and WebSocket support
 
-Logs are written to the console with timestamps and thread details for easier debugging.
+## Developers
 
-## License
-
-This project is licensed under the MIT License.
+Developed by Billy @ Ratatatamoth group - 2025
