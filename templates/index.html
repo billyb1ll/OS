@@ -902,57 +902,7 @@
 					</div>
 				</div>
 
-				<!-- Parameter Impact Monitor moved here -->
-				<div class="monitor-section">
-					<h3>Parameter Impact</h3>
-					<div class="impact-container">
-						<!-- Resolution Impact -->
-						<div class="impact-row">
-							<span class="impact-label">Resolution</span>
-							<div class="impact-bar-container">
-								<div class="impact-bar" id="resolution-impact" style="width: 0%"></div>
-							</div>
-							<span class="impact-value" id="resolution-impact-value">0%</span>
-						</div>
-						<!-- Smoothing Impact -->
-						<div class="impact-row">
-							<span class="impact-label">Smoothing</span>
-							<div class="impact-bar-container">
-								<div class="impact-bar" id="smoothing-impact" style="width: 0%"></div>
-							</div>
-							<span class="impact-value" id="smoothing-impact-value">0%</span>
-						</div>
-						<!-- Chunk Size Impact -->
-						<div class="impact-row">
-							<span class="impact-label">Chunk Size</span>
-							<div class="impact-bar-container">
-								<div class="impact-bar" id="chunk-impact" style="width: 0%"></div>
-							</div>
-							<span class="impact-value" id="chunk-impact-value">0%</span>
-						</div>
-						<!-- Network Delay Impact -->
-						<div class="impact-row">
-							<span class="impact-label">Network Delay</span>
-							<div class="impact-bar-container">
-								<div class="impact-bar" id="network-impact" style="width: 0%"></div>
-							</div>
-							<span class="impact-value" id="network-impact-value">0%</span>
-						</div>
-						<!-- Visualization Style Impact -->
-						<div class="impact-row">
-							<span class="impact-label">Viz Style</span>
-							<div class="impact-bar-container">
-								<div class="impact-bar" id="viz-style-impact" style="width: 0%"></div>
-							</div>
-							<span class="impact-value" id="viz-style-impact-value">0%</span>
-						</div>
-					</div>
-
-					<button id="run-impact-test-button" class="impact-test-btn">
-						Run Impact Test
-					</button>
-					<div id="impact-test-result">See which parameter has the most impact</div>
-				</div>
+				
 			</div>
 		</div>
 
@@ -977,7 +927,7 @@
 							type="range"
 							id="resolution-control"
 							min="64"
-							max="1024"
+							max="2048"
 							step="64"
 							value="256" />
 						<span class="value-display" id="resolution-display">256 px</span>
